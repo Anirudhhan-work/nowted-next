@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* light */
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #f9f9ff;
+  --background-100: rgba(255, 255, 255);
+  --background-400: rgba(49, 46, 181, 0.09);
+  --background-500: rgba(26, 0, 0);
+  --background-700: rgba(82 82 91);
+  --background-800: rgba(44, 44, 44);
+  --slider: rgb(161, 161, 170);
+  --color: black;
+}
+
+/* declare */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background-100: var(--background-100);
+  --color-primary: #3a37df;
+  --color-background-400: var(--background-400);
+  --color-background-500: var(--background-500);
+  --color-background-700: var(--background-700);
+  --color-background-800: var(--background-800);
+  --scrollbar-slider: var(--slider);
+  --color-color: var(--color);
+}
+
+/* dark */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #181818;
+    --foreground: #ededed;
+    --background-100: rgb(32, 32, 32);
+    --background-400: rgba(255, 255, 255, 0.06);
+    --background-500: rgba(255, 255, 255, 0.05);
+    --background-700: rgb(161, 161, 170);
+    --background-800: rgba(184, 183, 183, 0.6);
+    --slider: rgba(255, 255, 255, 0.111);
+    --color: white;
+  }
 }
