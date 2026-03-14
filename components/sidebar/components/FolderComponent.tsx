@@ -1,0 +1,112 @@
+"use client";
+import { Folder, FolderOpen, FolderPlus } from "lucide-react";
+import TabButton from "./TabButton";
+import { useCallback, useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { useParams, useRouter } from "next/navigation";
+import { useNotes } from "@/utils/hooks";
+import { createFolder, getFolders } from "@/features/folders/folderAPI";
+import TabButtonSkeleton from "@/components/skeleton/TabButtonSkeleton";
+
+const FolderComponent = () => {
+  const [isFolderLoading, setIsFolderLoading] = useState(false);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const router = useRouter();
+  const { folderName, category } = useParams();
+
+  const { folderList, setFolderListState } = useNotes();
+
+  const fetchFolders = useCallback(async () => {
+    setIsFolderLoading(true);
+    try {
+      const { folders } = await getFolders();
+      setFolderListState(folders);
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("Something went wrong");
+      }
+    } finally {
+      setIsFolderLoading(false);
+    }
+  }, [setFolderListState]);
+
+  useEffect(() => {
+    fetchFolders();
+  }, [fetchFolders]);
+
+  useEffect(() => {
+    if (!folderList?.length) return;
+
+    const firstFolder = folderList[0];
+
+    if (
+      !folderName &&
+      !(
+        category === "favorite" ||
+        category === "deleted" ||
+        category === "archived" ||
+        category === "s"
+      )
+    ) {
+      router.push(`/${encodeURIComponent(firstFolder.name)}/${firstFolder.id}`);
+    }
+  }, [category, folderList, folderName, router]);
+
+  const handleCreateFolder = async () => {
+    if (isCreatingFolder) return;
+    setIsCreatingFolder(true);
+
+    try {
+      const res = await createFolder("Untitled");
+      toast.success(res);
+      await fetchFolders();
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("Something went wrong");
+      }
+    } finally {
+      setIsCreatingFolder(false);
+    }
+  };
+
+  return (
+    <section className="py-4 min-h-0 flex flex-col">
+      <div className="flex justify-between px-5 items-center text-background-800 py-2">
+        <h3 className="text-sm font-medium">Folders</h3>
+        <FolderPlus
+          size={20}
+          onClick={() => handleCreateFolder()}
+          className="cursor-pointer"
+        />
+      </div>
+
+      <div className="flex flex-col gap-0.5 min-h-0 overflow-y-auto scrollbar py-1">
+        {folderList?.map((folder) => (
+          <TabButton
+            path={`/${encodeURIComponent(folder.name)}/${folder.id}`}
+            key={folder.id}
+            icon={Folder}
+            label={folder.name}
+            activeIcon={FolderOpen}
+            editable={true}
+            reloadData={fetchFolders}
+            folderId={folder.id}
+          />
+        ))}
+        {isFolderLoading && (
+          <>
+            <TabButtonSkeleton Icon={Folder} />
+            <TabButtonSkeleton Icon={Folder} />
+            <TabButtonSkeleton Icon={Folder} />
+          </>
+        )}
+      </div>
+    </section>
+  );
+};
+
+export default FolderComponent;

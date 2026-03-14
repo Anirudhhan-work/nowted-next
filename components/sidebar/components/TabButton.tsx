@@ -1,0 +1,174 @@
+"use client";
+import { Loader2, Trash2, type LucideIcon } from "lucide-react";
+import { useRef, useState, type MouseEvent } from "react";
+import toast from "react-hot-toast";
+import { usePathname, useRouter } from "next/navigation";
+import ConfirmationModal from "@/components/modal/ConfirmationModal";
+import { deleteFolder, renameFolder } from "@/features/folders/folderAPI";
+import Link from "next/link";
+
+interface TabButtonProps {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  activeIcon?: LucideIcon;
+  editable?: boolean;
+  reloadData?: () => void;
+  folderId?: string;
+}
+
+const TabButton = ({
+  path,
+  label,
+  icon: Icon,
+  activeIcon: ActiveIcon,
+  editable = false,
+  reloadData,
+  folderId,
+}: TabButtonProps) => {
+  const [input, setInput] = useState(label);
+  const [edit, setEdit] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const isActive = pathname === path;
+
+  const handleBlur = async () => {
+    if (!folderId) {
+      setEdit(false);
+      return;
+    }
+
+    if (input.trim() === label || input.trim()?.length === 0) {
+      setInput(label);
+      setEdit(false);
+      return;
+    }
+
+    if (input.trim()?.length > 20) {
+      setInput(label);
+      toast.error("No more than 20 character");
+      setEdit(false);
+      return;
+    }
+    try {
+      const res = await renameFolder(folderId, input.trim());
+      toast.success(res);
+      router.push(`/${encodeURIComponent(input.trim())}/${folderId}`);
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("Something went wrong");
+      }
+    } finally {
+      setEdit(false);
+    }
+  };
+
+  const handleDoubleClick = (e: MouseEvent) => {
+    e.preventDefault();
+    setEdit(true);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+  };
+
+  const handleDeleteFolder = async () => {
+    if (!folderId) return toast.error("Invalid Folder Id");
+    setIsDeleting(true);
+    try {
+      const res = await deleteFolder(folderId);
+      toast.success(res);
+      reloadData?.();
+      router.push("/");
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("Something went wrong");
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <>
+      <Link
+        href={path}
+        onDoubleClick={handleDoubleClick}
+        className={`tab-btn group ${
+          isActive
+            ? "bg-primary rounded-sm text-white"
+            : "hover:bg-background-400 text-background-700"
+        }`}
+      >
+        <>
+          {isActive && ActiveIcon ? (
+            <div>
+              <ActiveIcon size={20} />
+            </div>
+          ) : (
+            <div>
+              <Icon size={20} />
+            </div>
+          )}
+
+          {editable && edit ? (
+            <input
+              type="text"
+              value={input}
+              ref={inputRef}
+              className="outline-none bg-transparent w-full"
+              onBlur={handleBlur}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  inputRef.current?.blur();
+                }
+              }}
+              onChange={(e) => setInput(e.target.value)}
+            />
+          ) : (
+            <span className="flex justify-between w-full items-center">
+              <div className="w-50">
+                <p className="truncate">{input}</p>
+              </div>
+
+              {editable && !isDeleting && (
+                <Trash2
+                  size={17}
+                  className="group-hover:block hover:text-red-500 hidden"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowDeleteModal(true);
+                  }}
+                />
+              )}
+
+              {isDeleting && (
+                <Loader2 size={20} className="animate-spin text-red-500" />
+              )}
+            </span>
+          )}
+        </>
+      </Link>
+      {showDeleteModal && (
+        <ConfirmationModal
+          message="Are you sure you want to delete this Folder?"
+          onConfirm={() => {
+            setShowDeleteModal(false);
+            handleDeleteFolder();
+          }}
+          onCancel={() => setShowDeleteModal(false)}
+          type="Folder"
+        />
+      )}
+    </>
+  );
+};
+
+export default TabButton;

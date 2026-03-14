@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import SideBar from "@/components/sidebar/SideBar";
+import { NoteProvider } from "@/context/Notes/NoteState";
+import { Toaster } from "react-hot-toast";
+import { ThemeProvider } from "@/context/theme/ThemeState";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +31,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider>
+          <NoteProvider>
+            <div
+              className={`w-full bg-background overflow-hidden h-screen dark:text-white flex  text-blue`}
+            >
+              <div className="w-[18%]">
+                <SideBar />
+              </div>
+              <div className="overflow-y-auto w-[82%]">{children}</div>
+              <Toaster position="bottom-right" />
+            </div>
+          </NoteProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

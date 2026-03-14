@@ -1,3 +1,4 @@
+"use client";
 import { FolderType } from "@/features/folders/type";
 import {
   getNotesByCategory,

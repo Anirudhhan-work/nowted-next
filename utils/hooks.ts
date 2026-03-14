@@ -1,3 +1,4 @@
+"use client";
 import { NoteContext } from "@/context/Notes/NoteContext";
 import { useRef } from "react";
 import { useContext } from "react";
